@@ -1,0 +1,28 @@
+name: Build iOS IPA
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Build IPA Application
+        run: |
+          xcodebuild -project ThreeOneOSFive.xcodeproj -scheme ThreeOneOSFive -configuration Release archive -archivePath $PWD/build/ThreeOneOSFive.xcarchive
+          mkdir -p $PWD/build/Payload
+          cp -r $PWD/build/ThreeOneOSFive.xcarchive/Products/Applications/*.app $PWD/build/Payload/
+          cd $PWD/build
+          zip -r ZaynixFile.ipa Payload
+          
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZaynixFile_Application
+          path: build/ZaynixFile.ipa
+          
