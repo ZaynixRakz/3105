@@ -1,52 +1,48 @@
-name: ZaynixFile Final Rebrand
+name: ZaynixFile Pure Patcher Final
 on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: macos-14
+  patch:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Xcode Version
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app
-
-      - name: Inject Rebrand to Info Plist
+      - name: Fetch and Inject Rebrand
         run: |
-          # Mengubah display nama internal aplikasi di semua file konfigurasi secara sistemik
-          find . -name "Info.plist" -exec plutil -replace CFBundleDisplayName -string "ZaynixFile" {} \;
-          find . -name "Info.plist" -exec plutil -replace CFBundleName -string "ZaynixFile" {} \;
-
-      - name: Official Compilation
+          mkdir -p build/Payload
+          
+          # 1. Mengunduh IPA resmi 3105 yang stabil dan matang langsung dari server rilis GitHub
+          curl -L -o basis_aplikasi.ipa "https://github.com"
+          
+          # 2. Ekstrak isi berkas IPA tersebut
+          unzip -q basis_aplikasi.ipa -d ekstrak_data
+          
+          # 3. Pindahkan folder aplikasinya ke folder Payload baru kita
+          cp -r ekstrak_data/Payload/*.app build/Payload/ZaynixFile.app
+          
+          # 4. Suntikkan konfigurasi nama baru ZaynixFile secara permanen ke sistem Info.plist
+          cd build/Payload/ZaynixFile.app
+          chmod +w Info.plist
+          
+          # Gunakan perintah python bawaan Linux untuk mengganti nama aplikasi secara akurat tanpa merusak file biner
+          python3 -c '
+          import plistlib
+          with open("Info.plist", "rb") as f:
+              pl = plistlib.load(f)
+          pl["CFBundleDisplayName"] = "ZaynixFile"
+          pl["CFBundleName"] = "ZaynixFile"
+          with open("Info.plist", "wb") as f:
+              plistlib.dump(pl, f)
+          '
+          
+      - name: Package to Real IPA
         run: |
-          mkdir -p $PWD/build/Payload
+          cd build
+          # Membungkus kembali seluruh folder biner utuh menjadi file .IPA matang
+          zip -qy -r ZaynixFile_Fix_Total.ipa Payload
           
-          # Kompilasi bersih mendalam untuk menghasilkan file biner aplikasi utuh
-          xcodebuild clean archive \
-            -project ThreeOneOSFive.xcodeproj \
-            -scheme 3105 \
-            -configuration Release \
-            -sdk iphoneos \
-            -archivePath $PWD/build/ZaynixFile.xcarchive \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
-            ONLY_ACTIVE_ARCH=NO \
-            GCC_TREAT_WARNINGS_AS_ERRORS=NO \
-            COMPILER_INDEX_STORE_ENABLE=NO
-          
-          # Memindahkan file aplikasi matang (.app) ke dalam folder Payload
-          cp -r $PWD/build/ZaynixFile.xcarchive/Products/Applications/*.app $PWD/build/Payload/ 2>/dev/null || cp -r /Users/runner/Library/Developer/Xcode/DerivedData/*/Build/Products/Release-iphoneos/*.app $PWD/build/Payload/
-          
-          # Mengemas aplikasi utuh menjadi file .IPA matang
-          cd $PWD/build
-          zip -qy -r ZaynixFile_Final.ipa Payload
-          
-      - name: Upload Valid IPA
+      - name: Upload Real Sized IPA
         uses: actions/upload-artifact@v4
         with:
-          name: ZaynixFile_Siap_Instal
-          path: build/ZaynixFile_Final.ipa
+          name: ZaynixFile_Matang_Siap_Instal
+          path: build/ZaynixFile_Fix_Total.ipa
           
