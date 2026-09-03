@@ -12,11 +12,18 @@ jobs:
       - name: Set up Xcode Version
         run: sudo xcode-select -s /Applications/Xcode_15.4.app
 
-      - name: Build IPA Application
+      - name: Compile and Force Build IPA
         run: |
-          xcodebuild -project ThreeOneOSFive.xcodeproj -scheme 3105 -configuration Release archive -archivePath $PWD/build/3105.xcarchive CODE_SIGNING_ALLOWED=NO
+          # Kompilasi otomatis mendeteksi proyek secara langsung
+          xcodebuild -workspace *.xcworkspace 2>/dev/null || xcodebuild -project *.xcodeproj -scheme 3105 -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO clean archive -archivePath $PWD/build/ZaynixFile.xcarchive
+          
+          # Membuat folder Payload untuk membungkus aplikasi
           mkdir -p $PWD/build/Payload
-          cp -r $PWD/build/3105.xcarchive/Products/Applications/*.app $PWD/build/Payload/
+          
+          # Menyalin file aplikasi hasil kompilasi ke dalam folder Payload
+          cp -r $PWD/build/ZaynixFile.xcarchive/Products/Applications/*.app $PWD/build/Payload/ 2>/dev/null || cp -r /Users/runner/Library/Developer/Xcode/DerivedData/*/Build/Products/Release-iphoneos/*.app $PWD/build/Payload/
+          
+          # Membungkus menjadi file mentahan .IPA siap instal
           cd $PWD/build
           zip -r ZaynixFile.ipa Payload
           
