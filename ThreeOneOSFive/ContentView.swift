@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct OnyxFFMainView: View {
+struct ZaynixFileMainView: View {
     // Pengaturan 2 Kolom untuk menu kotak
     let gridColumns = [
         GridItem(.flexible(), spacing: 16),
@@ -9,7 +9,7 @@ struct OnyxFFMainView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            // Bagian Header Merek Seperti di Foto Anda
+            // Bagian Header Merek ZaynixFile Seperti di Foto Anda
             VStack(alignment: .leading, spacing: 6) {
                 Text("FREE FIRE TOOLKIT")
                     .font(.caption2)
@@ -17,13 +17,13 @@ struct OnyxFFMainView: View {
                     .foregroundColor(.gray)
                 
                 HStack {
-                    Text("ONYX FF")
+                    Text("ZaynixFile")
                         .font(.largeTitle)
                         .fontWeight(.black)
                         .foregroundColor(.white)
                     Spacer()
-                    // Tempat Logo Kucing/Merek Anda
-                    Image(systemName: "cat.fill")
+                    // Ikon bawaan sistem untuk logo merek Anda
+                    Image(systemName: "folder.badge.gearshape")
                         .font(.system(size: 32))
                         .foregroundColor(.white)
                 }
@@ -34,7 +34,7 @@ struct OnyxFFMainView: View {
             HStack {
                 Circle()
                     .fill(Color.green)
-                    .frame(width: 8, width: 8)
+                    .frame(width: 8, height: 8)
                 Text("Access layer ready")
                     .font(.subheadline)
                     .foregroundColor(.white)
@@ -53,7 +53,7 @@ struct OnyxFFMainView: View {
             // Susunan Menu Kotak-Kotak Besar 2x2
             LazyVGrid(columns: gridColumns, spacing: 16) {
                 MenuBoxItem(icon: "bolt.fill", title: "Inject", subtitle: "Choose game target")
-                MenuBoxItem(icon: "folder.fill", title: "ONYX Library", subtitle: "Import packages")
+                MenuBoxItem(icon: "folder.fill", title: "Zaynix Library", subtitle: "Import packages")
                 MenuBoxItem(icon: "sparkles", title: "Cleaner", subtitle: "Review workspace")
                 MenuBoxItem(icon: "gearshape.fill", title: "Settings", subtitle: "Device & access")
             }
