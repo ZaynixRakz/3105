@@ -1,7 +1,7 @@
 import SwiftUI
 
-struct ZaynixFileMainView: View {
-    // Pengaturan 2 Kolom untuk menu kotak
+struct ContentView: View {
+    // Pengaturan 2 Kolom menu kotak (Grid Layout)
     let gridColumns = [
         GridItem(.flexible(), spacing: 16),
         GridItem(.flexible(), spacing: 16)
@@ -9,7 +9,7 @@ struct ZaynixFileMainView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            // Bagian Header Merek ZaynixFile Seperti di Foto Anda
+            // Bagian Header Merek Kustom Anda
             VStack(alignment: .leading, spacing: 6) {
                 Text("FREE FIRE TOOLKIT")
                     .font(.caption2)
@@ -22,7 +22,7 @@ struct ZaynixFileMainView: View {
                         .fontWeight(.black)
                         .foregroundColor(.white)
                     Spacer()
-                    // Ikon bawaan sistem untuk logo merek Anda
+                    // Logo kustom folder sistem untuk merek Anda
                     Image(systemName: "folder.badge.gearshape")
                         .font(.system(size: 32))
                         .foregroundColor(.white)
@@ -30,7 +30,7 @@ struct ZaynixFileMainView: View {
             }
             .padding(.top, 20)
             
-            // Status Akses Aplikasi
+            // Status Akses Aplikasi bawaan 3105
             HStack {
                 Circle()
                     .fill(Color.green)
@@ -50,7 +50,7 @@ struct ZaynixFileMainView: View {
                 .foregroundColor(.gray)
                 .padding(.top, 10)
             
-            // Susunan Menu Kotak-Kotak Besar 2x2
+            // Perubahan Menu List Menjadi Tampilan Kotak 2x2
             LazyVGrid(columns: gridColumns, spacing: 16) {
                 MenuBoxItem(icon: "bolt.fill", title: "Inject", subtitle: "Choose game target")
                 MenuBoxItem(icon: "folder.fill", title: "Zaynix Library", subtitle: "Import packages")
@@ -65,7 +65,7 @@ struct ZaynixFileMainView: View {
     }
 }
 
-// Template Komponen Kotak Menu
+// Komponen Pembentuk Kotak Menu
 struct MenuBoxItem: View {
     var icon: String
     var title: String
