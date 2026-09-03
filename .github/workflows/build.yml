@@ -1,35 +1,50 @@
-name: ZaynixFile Final Fix Patcher
+name: ZaynixFile Perfect Build Final
 on:
   workflow_dispatch:
 
 jobs:
-  patch:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Create Structure and Rebrand
+      - name: Fetch Official Binary and Inject Rebrand
         run: |
-          # 1. Membuat folder pembungkus standar iOS
-          mkdir -p build/Payload/ZaynixFile.app
+          mkdir -p build/Payload
           
-          # 2. Menyalin seluruh aset dasar repositori Anda ke dalam kemasan aplikasi
-          cp -r * build/Payload/ZaynixFile.app/ 2>/dev/null || true
+          # 1. Mengunduh file resmi 1.1.1 berukuran 3.6 MB langsung dari server rilis resmi GitHub
+          curl -L -o basis_aplikasi.ipa "https://github.com"
           
-          # 3. Menyuntikkan file identitas nama baru ZaynixFile agar dibaca sistem iPhone
+          # 2. Ekstrak paket aplikasinya secara aman
+          unzip -q basis_aplikasi.ipa -d ekstrak_data
+          
+          # 3. Memindahkan seluruh komponen biner 3.6 MB ke folder kemasan baru Anda
+          cp -r ekstrak_data/Payload/*.app build/Payload/ZaynixFile.app
+          
+          # 4. Menyuntikkan konfigurasi nama baru ZaynixFile langsung ke sistem internal aplikasi
           cd build/Payload/ZaynixFile.app
-          echo '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://apple.com"><plist version="1.0"><dict><key>CFBundleDisplayName</key><string>ZaynixFile</string><key>CFBundleName</key><string>ZaynixFile</string><key>CFBundleIdentifier</key><string>com.apple.mobile.MobileHouseArrest</string><key>CFBundleVersion</key><string>1.1.0</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleShortVersionString</key><string>1.1.0</string><key>MinimumOSVersion</key><string>15.0</string></dict></plist>' > Info.plist
+          chmod +w Info.plist
           
-      - name: Package to Authentic IPA
+          python3 -c '
+          import plistlib
+          with open("Info.plist", "rb") as f:
+              pl = plistlib.load(f)
+          pl["CFBundleDisplayName"] = "ZaynixFile"
+          pl["CFBundleName"] = "ZaynixFile"
+          with open("Info.plist", "wb") as f:
+              plistlib.dump(pl, f)
+          '
+          
+      - name: Package to Stable Full IPA
         run: |
           cd build
-          # Membungkus paket menjadi berkas .IPA matang
-          zip -qy -r ZaynixFile_Final_Fix.ipa Payload
+          # Membungkus kembali semua struktur data matang menjadi file .IPA utuh
+          zip -qy -r ZaynixFile_Merek_Zack.ipa Payload
           
-      - name: Upload Finished Application
+      - name: Upload Perfect Sized IPA
         uses: actions/upload-artifact@v4
         with:
-          name: ZaynixFile_Siap_Pakai
-          path: build/ZaynixFile_Final_Fix.ipa
+          name: ZaynixFile_Merek_Zack_Final
+          path: build/ZaynixFile_Merek_Zack.ipa
           
