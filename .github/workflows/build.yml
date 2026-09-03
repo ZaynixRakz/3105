@@ -1,4 +1,4 @@
-name: Build iOS IPA Final
+name: Build Rebranded iOS IPA
 on:
   workflow_dispatch:
 
@@ -12,30 +12,39 @@ jobs:
       - name: Set up Xcode Version
         run: sudo xcode-select -s /Applications/Xcode_15.4.app
 
-      - name: Force Compile and Packaging
+      - name: Complete Project Rebrand
+        run: |
+          # Mengubah display name aplikasi di info.plist secara sistemik
+          find . -name "Info.plist" -exec plutil -replace CFBundleDisplayName -string "ZaynixFile" {} \;
+          find . -name "Info.plist" -exec plutil -replace CFBundleName -string "ZaynixFile" {} \;
+
+      - name: Official Xcode Compile
         run: |
           mkdir -p $PWD/build/Payload
           
-          # Memaksa kompilasi target aplikasi utama secara independen
-          xcodebuild build -project ThreeOneOSFive.xcodeproj -scheme 3105 -configuration Release -sdk iphoneos -allowProvisioningUpdates CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO GCC_TREAT_WARNINGS_AS_ERRORS=NO COMPILER_INDEX_STORE_ENABLE=NO || true
+          # Kompilasi bersih mendalam untuk menghasilkan ZMachO binary yang valid
+          xcodebuild clean archive \
+            -project ThreeOneOSFive.xcodeproj \
+            -scheme 3105 \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath $PWD/build/ZaynixFile.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            ONLY_ACTIVE_ARCH=NO
           
-          # Menyisir komputer server secara brutal untuk mencari file aplikasi hasil kompilasi
-          find /Users/runner/Library/Developer/Xcode/DerivedData -name "*.app" -exec cp -r {} $PWD/build/Payload/ \; 2>/dev/null || true
-          find . -name "*.app" -exec cp -r {} $PWD/build/Payload/ \; 2>/dev/null || true
+          # Memindahkan file aplikasi matang ke dalam Payload untuk diinstal
+          cp -r $PWD/build/ZaynixFile.xcarchive/Products/Applications/*.app $PWD/build/Payload/
           
-          # Memastikan file aplikasi berbobot masuk ke folder kemasan
+          # Mengemas struktur aplikasi ke berkas .IPA resmi
           cd $PWD/build
-          if [ "$(ls -A Payload)" ]; then
-            zip -r ZaynixFile.ipa Payload
-          else
-            echo "Membuat berkas instalasi alternatif..."
-            mkdir -p Payload/ZaynixFile.app
-            zip -r ZaynixFile.ipa Payload
-          fi
+          zip -r ZaynixFile.ipa Payload
           
-      - name: Upload IPA Artifact
+      - name: Upload Finished IPA
         uses: actions/upload-artifact@v4
         with:
-          name: ZaynixFile_Application_Final
+          name: ZaynixFile_Rebranded_App
           path: build/ZaynixFile.ipa
           
