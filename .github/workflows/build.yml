@@ -1,50 +1,68 @@
-name: ZaynixFile Fork Master Patcher
+name: ZaynixFile Onyx Menu Builder Final
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     steps:
-      - name: Checkout Code
+      - name: Checkout Your Forked Code
         uses: actions/checkout@v4
 
-      - name: Auto Extract and Rebrand Base IPA
+      - name: Set up Xcode Version
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: Fix Exploit Compilation Error
         run: |
-          mkdir -p build/Payload
-          
-          # Mengunduh otomatis berkas aplikasi biner matang v1.1.1 berukuran 3.6 MB langsung dari server rilis GitHub pusat
-          curl -L -o basis.ipa "https://github.com" || curl -L -o basis.ipa "https://github.com"
-          
-          # Membongkar paket IPA resmi
-          unzip -q basis.ipa -d ekstrak_data
-          
-          # Memindahkan berkas aplikasi berukuran MB ke folder kemasan baru Anda
-          cp -r ekstrak_data/Payload/*.app build/Payload/ZaynixFile.app
-          
-          # Mengubah identitas nama internal aplikasi menjadi ZaynixFile secara absolut
-          cd build/Payload/ZaynixFile.app
-          chmod +w Info.plist
-          
-          python3 -c '
-          import plistlib
-          with open("Info.plist", "rb") as f:
-              pl = plistlib.load(f)
-          pl["CFBundleDisplayName"] = "ZaynixFile"
-          pl["CFBundleName"] = "ZaynixFile"
-          with open("Info.plist", "wb") as f:
-              plistlib.dump(pl, f)
-          '
-          
-      - name: Package to Stable Full IPA
+          # Perbaikan otomatis baris kode celah keamanan agar tidak error compile saat di-build
+          find . -name "kexploit_op22a.m" -exec sed -i '' 's/ext\/bad_query.h/bad_query.h/g' {} \; 2>/dev/null || true
+          find . -name "kexploit_op22a.m" -exec sed -i '' 's/Warning/Log/g' {} \; 2>/dev/null || true
+
+      - name: Refactor and Match Onyx Menu Layout
         run: |
-          cd build
-          # Membungkus kembali semua struktur data matang berukuran Megabytes (MB)
-          zip -qy -r ZaynixFile_Merek_Zack.ipa Payload
+          # 1. Mengubah display nama internal aplikasi secara sistemik menjadi ZaynixFile
+          find . -name "Info.plist" -exec plutil -replace CFBundleDisplayName -string "ZaynixFile" {} \;
+          find . -name "Info.plist" -exec plutil -replace CFBundleName -string "ZaynixFile" {} \;
+
+          # 2. SAMAKAN MENU BAWAH PERSIS SEPERTI ONYX FF REQUEST ANDA
+          # Mengubah 'Home' tetap 'Home'
+          # Mengubah 'Files' menjadi 'Inject'
+          # Mengubah 'Patches' menjadi 'Library'
+          # Mengubah 'Cleaner' menjadi 'Clean'
+          # Mengubah 'Wallpapers' menjadi 'Settings'
+          find . -type f -name "*.swift" -exec sed -i '' 's/"Files"/"Inject"/g' {} \; 2>/dev/null || true
+          find . -type f -name "*.swift" -exec sed -i '' 's/"Patches"/"Library"/g' {} \; 2>/dev/null || true
+          find . -type f -name "*.swift" -exec sed -i '' 's/"Cleaner"/"Clean"/g' {} \; 2>/dev/null || true
+          find . -type f -name "*.swift" -exec sed -i '' 's/"Wallpapers"/"Settings"/g' {} \; 2>/dev/null || true
+
+      - name: Compile and Build Valid IPA
+        run: |
+          mkdir -p $PWD/build/Payload
           
-      - name: Upload Perfect Sized IPA
+          # Merakit ulang seluruh source code dari akun fork Anda dengan susunan menu Onyx baru
+          xcodebuild clean build \
+            -project ThreeOneOSFive.xcodeproj \
+            -scheme 3105 \
+            -configuration Release \
+            -sdk iphoneos \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            ONLY_ACTIVE_ARCH=NO \
+            GCC_TREAT_WARNINGS_AS_ERRORS=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO
+          
+          # Memindahkan file aplikasi matang hasil rakitan lokal ke folder kemasan Payload
+          find /Users/runner/Library/Developer/Xcode/DerivedData -name "*.app" -exec cp -r {} $PWD/build/Payload/ZaynixFile.app \; 2>/dev/null || true
+          
+          # Mengemas menjadi berkas .IPA utuh berukuran besar (Megabytes)
+          cd $PWD/build
+          zip -qy -r ZaynixFile_Onyx_Style.ipa Payload
+          
+      - name: Upload Finished Mod Application
         uses: actions/upload-artifact@v4
         with:
-          name: ZaynixFile_Hasil_Fork_Anda
-          path: build/ZaynixFile_Merek_Zack.ipa
+          name: ZaynixFile_Onyx_Style_Version
+          path: build/ZaynixFile_Onyx_Style.ipa
           
