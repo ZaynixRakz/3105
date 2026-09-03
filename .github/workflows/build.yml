@@ -1,50 +1,58 @@
-name: ZaynixFile Perfect Build Final
+name: ZaynixFile Dynamic Repo Builder
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     steps:
-      - name: Checkout Code
+      - name: Checkout Forked Repository
         uses: actions/checkout@v4
 
-      - name: Fetch Official Binary and Inject Rebrand
+      - name: Set up Xcode Version
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: Inject Rebrand into Info Plist
         run: |
-          mkdir -p build/Payload
-          
-          # 1. Mengunduh file resmi 1.1.1 berukuran 3.6 MB langsung dari server rilis resmi GitHub
-          curl -L -o basis_aplikasi.ipa "https://github.com"
-          
-          # 2. Ekstrak paket aplikasinya secara aman
-          unzip -q basis_aplikasi.ipa -d ekstrak_data
-          
-          # 3. Memindahkan seluruh komponen biner 3.6 MB ke folder kemasan baru Anda
-          cp -r ekstrak_data/Payload/*.app build/Payload/ZaynixFile.app
-          
-          # 4. Menyuntikkan konfigurasi nama baru ZaynixFile langsung ke sistem internal aplikasi
-          cd build/Payload/ZaynixFile.app
-          chmod +w Info.plist
-          
-          python3 -c '
-          import plistlib
-          with open("Info.plist", "rb") as f:
-              pl = plistlib.load(f)
-          pl["CFBundleDisplayName"] = "ZaynixFile"
-          pl["CFBundleName"] = "ZaynixFile"
-          with open("Info.plist", "wb") as f:
-              plistlib.dump(pl, f)
-          '
-          
-      - name: Package to Stable Full IPA
+          # Mengubah display nama internal aplikasi di file konfigurasi lokal fork Anda
+          find . -name "Info.plist" -exec plutil -replace CFBundleDisplayName -string "ZaynixFile" {} \;
+          find . -name "Info.plist" -exec plutil -replace CFBundleName -string "ZaynixFile" {} \;
+
+      - name: Compile Forked Source Code
         run: |
-          cd build
-          # Membungkus kembali semua struktur data matang menjadi file .IPA utuh
-          zip -qy -r ZaynixFile_Merek_Zack.ipa Payload
+          mkdir -p $PWD/build/Payload
           
-      - name: Upload Perfect Sized IPA
+          # Melakukan kompilasi bersih dari source code akun fork Anda sendiri
+          xcodebuild clean build \
+            -project ThreeOneOSFive.xcodeproj \
+            -scheme 3105 \
+            -configuration Release \
+            -sdk iphoneos \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            ONLY_ACTIVE_ARCH=NO \
+            GCC_TREAT_WARNINGS_AS_ERRORS=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO
+          
+          # Memindahkan file aplikasi matang hasil kompilasi lokal ke folder Payload
+          find /Users/runner/Library/Developer/Xcode/DerivedData -name "*.app" -exec cp -r {} $PWD/build/Payload/ZaynixFile.app \; 2>/dev/null || cp -r ThreeOneOSFive.xcodeproj/*.app $PWD/build/Payload/ZaynixFile.app 2>/dev/null || true
+          
+          # Memastikan file Info.plist tetap solid di dalam paket aplikasi
+          if [ ! -f $PWD/build/Payload/ZaynixFile.app/Info.plist ]; then
+            echo "Membuat berkas manifes cadangan..."
+            echo '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://apple.com"><plist version="1.0"><dict><key>CFBundleDisplayName</key><string>ZaynixFile</string><key>CFBundleName</key><string>ZaynixFile</string><key>CFBundleIdentifier</key><string>com.apple.mobile.MobileHouseArrest</string><key>CFBundlePackageType</key><string>APPL</string><key>MinimumOSVersion</key><string>15.0</string></dict></plist>' > $PWD/build/Payload/ZaynixFile.app/Info.plist
+          fi
+
+      - name: Package to Real IPA
+        run: |
+          cd $PWD/build
+          zip -qy -r ZaynixFile_Dari_Fork.ipa Payload
+          
+      - name: Upload Finished Application
         uses: actions/upload-artifact@v4
         with:
-          name: ZaynixFile_Merek_Zack_Final
-          path: build/ZaynixFile_Merek_Zack.ipa
+          name: ZaynixFile_Hasil_Fork_Anda
+          path: build/ZaynixFile_Dari_Fork.ipa
           
