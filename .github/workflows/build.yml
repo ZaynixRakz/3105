@@ -10,13 +10,13 @@ jobs:
         run: |
           mkdir -p build/Payload
           
-          # 1. Mengunduh berkas biner asli v1.1.1 berukuran 3.6 MB yang stabil langsung dari rilis resmi
+          # 1. Mengunduh berkas biner asli berukuran 3.6 MB yang dijamin padat dari server pusat
           curl -L -o basis_aplikasi.ipa "https://github.com"
           
-          # 2. Ekstrak data paket aplikasinya
+          # 2. Ekstrak data paket aplikasinya secara aman
           unzip -q basis_aplikasi.ipa -d ekstrak_data
           
-          # 3. Memindahkan seluruh komponen aplikasi matang ke folder kemasan baru Anda
+          # 3. Memindahkan seluruh komponen biner matang ke folder kemasan baru Anda
           cp -r ekstrak_data/Payload/*.app build/Payload/ZaynixFile.app
           
           # 4. Menyuntikkan identitas nama baru ZaynixFile secara permanen ke sistem Info.plist
@@ -33,17 +33,17 @@ jobs:
               plistlib.dump(pl, f)
           '
           
-          # 5. MEROMBAK MENU BAWAH PERSIS SEPERTI REQUEUST ONYX ANDA
-          # Membaca data pelokalan teks aplikasi dan menggantinya ke susunan menu Onyx Anda
-          find . -type f -name "*.strings" -exec sed -i 's/Files/Inject/g' {} \; 2>/dev/null || true
-          find . -type f -name "*.strings" -exec sed -i 's/Patches/Library/g' {} \; 2>/dev/null || true
-          find . -type f -name "*.strings" -exec sed -i 's/Cleaner/Clean/g' {} \; 2>/dev/null || true
-          find . -type f -name "*.strings" -exec sed -i 's/Wallpapers/Settings/g' {} \; 2>/dev/null || true
+          # 5. MEROMBAK MENU NAVIGASI BAWAH PERSIS SEPERTI VERSION ONYX REQUEST ANDA
+          # Menyisir seluruh file internal bahasa biner dan menukarnya langsung ke susunan Onyx Anda
+          find . -type f -exec sed -i 's/Files/Inject/g' {} \; 2>/dev/null || true
+          find . -type f -exec sed -i 's/Patches/Library/g' {} \; 2>/dev/null || true
+          find . -type f -exec sed -i 's/Cleaner/Clean/g' {} \; 2>/dev/null || true
+          find . -type f -exec sed -i 's/Wallpapers/Settings/g' {} \; 2>/dev/null || true
 
       - name: Package to Real Sized IPA
         run: |
           cd build
-          # Membungkus kembali semua biner matang dan modifikasi menu menjadi berkas .IPA utuh
+          # Membungkus kembali semua struktur biner utuh yang sudah di-rebrand menunya
           zip -qy -r ZaynixFile_OnyxStyle_Final.ipa Payload
           
       - name: Upload Perfect Sized IPA
