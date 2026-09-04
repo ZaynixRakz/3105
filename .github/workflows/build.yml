@@ -14,21 +14,21 @@ jobs:
 
       - name: Hard Patch Navigation and Names
         run: |
-          # 1. Mengganti Nama Tampilan Aplikasi Menjadi ZaynixFile di Sistem Konfigurasi
+          # 1. Mengganti Nama Tampilan Aplikasi Menjadi ZaynixFile di Sistem Konfigurasi PLIST
           find . -name "Info.plist" -exec plutil -replace CFBundleDisplayName -string "ZaynixFile" {} \;
           find . -name "Info.plist" -exec plutil -replace CFBundleName -string "ZaynixFile" {} \;
 
-          # 2. Menyisir Teks Navigasi Bar Bawah Akun Fork Anda Untuk Disamakan Seperti Versi ONYX
+          # 2. Menyisir Teks Navigasi Bar Bawah Otomatis Agar Berubah Sesuai Keinginan Anda
           find . -type f -name "*.swift" -exec sed -i '' 's/"Files"/"Inject"/g' {} \; 2>/dev/null || true
           find . -type f -name "*.swift" -exec sed -i '' 's/"Patches"/"Library"/g' {} \; 2>/dev/null || true
           find . -type f -name "*.swift" -exec sed -i '' 's/"Cleaner"/"Clean"/g' {} \; 2>/dev/null || true
           find . -type f -name "*.swift" -exec sed -i '' 's/"Wallpapers"/"Settings"/g' {} \; 2>/dev/null || true
 
-      - name: Force Framework Bypass & Packaging
+      - name: Force Framework Packaging
         run: |
-          mkdir -p $PWD/build/Payload
+          mkdir -p build/Payload
           
-          # 3. Merakit Struktur Aplikasi Secara Mandiri Menggunakan Mesin iOS SDK Tanpa Pengecekan Celah Keamanan
+          # 3. Merakit Struktur Aplikasi Menggunakan Mesin iOS SDK Tanpa Proteksi Kode Dokumen
           xcodebuild build \
             -project ThreeOneOSFive.xcodeproj \
             -scheme 3105 \
@@ -38,25 +38,19 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             ONLY_ACTIVE_ARCH=NO \
             GCC_TREAT_WARNINGS_AS_ERRORS=NO \
-            COMPILER_INDEX_STORE_ENABLE=NO || true
+            COMPILER_INDEX_STORE_ENABLE=NO
           
-          # 4. Melacak dan Mengumpulkan File Aplikasi yang Berhasil Dirakit
-          find /Users/runner/Library/Developer/Xcode/DerivedData -name "*.app" -exec cp -r {} $PWD/build/Payload/ZaynixFile.app \; 2>/dev/null || true
+          # 4. Melacak dan Mengambil File Hasil Rakitan .app yang Resmi Terbentuk
+          find /Users/runner/Library/Developer/Xcode/DerivedData -name "*.app" -exec cp -r {} build/Payload/ZaynixFile.app \; 2>/dev/null || true
           
-          # 5. Jika Folder Kosong Akibat Blokir Kompilasi, Otomatis Ambil Basis Cadangan Stabil untuk Rebrand
-          if [ ! -d "$PWD/build/Payload/ZaynixFile.app" ]; then
-            echo "Mengaktifkan jalur bypass kompilasi..."
-            mkdir -p $PWD/build/Payload/ZaynixFile.app
-            curl -L -o basis.zip "https://github.com"
-            unzip -q basis.zip
-            cp -r 3105-main/* $PWD/build/Payload/ZaynixFile.app/ 2>/dev/null || true
+          # 5. Membungkus Hasil Akhir Menjadi Berkas Mentahan .ipa iOS
+          cd build
+          if [ -d "Payload/ZaynixFile.app" ]; then
+            zip -qy -r ZaynixFile_Merek_Saya.ipa Payload
+          else
+            echo "Kompilasi Gagal: Berkas aplikasi tidak ditemukan di DerivedData."
+            exit 1
           fi
-          
-          # Menyegarkan kembali manifes utama biner agar dikenali E-Sign Anda
-          echo '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://apple.com"><plist version="1.0"><dict><key>CFBundleDisplayName</key><string>ZaynixFile</string><key>CFBundleName</key><string>ZaynixFile</string><key>CFBundleIdentifier</key><string>com.apple.mobile.MobileHouseArrest</string><key>CFBundleVersion</key><string>1.1.1</string><key>CFBundlePackageType</key><string>APPL</string><key>MinimumOSVersion</key><string>15.0</string></dict></plist>' > $PWD/build/Payload/ZaynixFile.app/Info.plist
-
-          cd $PWD/build
-          zip -qy -r ZaynixFile_Merek_Saya.ipa Payload
 
       - name: Upload Valid Mod Application
         uses: actions/upload-artifact@v4
