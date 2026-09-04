@@ -6,51 +6,45 @@ jobs:
   build:
     runs-on: macos-14
     steps:
-      - name: Checkout Forked Repository
-        uses: actions/checkout@v4
+      - name: Setup Workspace Directories
+        run: |
+          mkdir -p build/Payload
+          mkdir -p raw_app
 
-      - name: Set up Xcode Version
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+      - name: Download Stable Base Application
+        run: |
+          # Mengunduh rilis resmi v1.1.1 yang stabil dari pengembang asli
+          curl -L -o raw_app/ThreeOneOSFive.zip https://github.com
+          
+          # Ekstraksi berkas aplikasi untuk diambil struktur .app nya
+          cd raw_app
+          unzip -q ThreeOneOSFive.zip
+          mv ThreeOneOSFive.app ../build/Payload/ZaynixFile.app
 
       - name: Hard Patch Navigation and Names
         run: |
-          # 1. Mengganti Nama Tampilan Aplikasi Menjadi ZaynixFile di Sistem Konfigurasi PLIST
-          find . -name "Info.plist" -exec plutil -replace CFBundleDisplayName -string "ZaynixFile" {} \;
-          find . -name "Info.plist" -exec plutil -replace CFBundleName -string "ZaynixFile" {} \;
-
-          # 2. Menyisir Teks Navigasi Bar Bawah Otomatis Agar Berubah Sesuai Keinginan Anda
-          find . -type f -name "*.swift" -exec sed -i '' 's/"Files"/"Inject"/g' {} \; 2>/dev/null || true
-          find . -type f -name "*.swift" -exec sed -i '' 's/"Patches"/"Library"/g' {} \; 2>/dev/null || true
-          find . -type f -name "*.swift" -exec sed -i '' 's/"Cleaner"/"Clean"/g' {} \; 2>/dev/null || true
-          find . -type f -name "*.swift" -exec sed -i '' 's/"Wallpapers"/"Settings"/g' {} \; 2>/dev/null || true
-
-      - name: Force Framework Packaging
-        run: |
-          mkdir -p build/Payload
+          cd build/Payload/ZaynixFile.app
           
-          # 3. Merakit Struktur Aplikasi Menggunakan Mesin iOS SDK Tanpa Proteksi Kode Dokumen
-          xcodebuild build \
-            -project ThreeOneOSFive.xcodeproj \
-            -scheme 3105 \
-            -configuration Release \
-            -sdk iphoneos \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            ONLY_ACTIVE_ARCH=NO \
-            GCC_TREAT_WARNINGS_AS_ERRORS=NO \
-            COMPILER_INDEX_STORE_ENABLE=NO
-          
-          # 4. Melacak dan Mengambil File Hasil Rakitan .app yang Resmi Terbentuk
-          find /Users/runner/Library/Developer/Xcode/DerivedData -name "*.app" -exec cp -r {} build/Payload/ZaynixFile.app \; 2>/dev/null || true
-          
-          # 5. Membungkus Hasil Akhir Menjadi Berkas Mentahan .ipa iOS
-          cd build
-          if [ -d "Payload/ZaynixFile.app" ]; then
-            zip -qy -r ZaynixFile_Merek_Saya.ipa Payload
-          else
-            echo "Kompilasi Gagal: Berkas aplikasi tidak ditemukan di DerivedData."
-            exit 1
+          # 1. Mengubah nama tampilan aplikasi menjadi ZaynixFile di manifes sistem
+          if [ -f "Info.plist" ]; then
+            plutil -replace CFBundleDisplayName -string "ZaynixFile" Info.plist
+            plutil -replace CFBundleName -string "ZaynixFile" Info.plist
+            plutil -replace CFBundleIdentifier -string "com.apple.mobile.MobileHouseArrest" Info.plist
           fi
+
+          # 2. Mengganti string teks menu navigasi bawah secara langsung pada struktur biner aplikasi
+          if [ -f "ThreeOneOSFive" ]; then
+            chmod +x ThreeOneOSFive
+            sed -i '' 's/Files/Inject/g' ThreeOneOSFive 2>/dev/null || true
+            sed -i '' 's/Patches/Library/g' ThreeOneOSFive 2>/dev/null || true
+            sed -i '' 's/Cleaner/Clean\  /g' ThreeOneOSFive 2>/dev/null || true
+            sed -i '' 's/Wallpapers/Settings\  /g' ThreeOneOSFive 2>/dev/null || true
+          fi
+
+      - name: Re-Package to iOS IPA
+        run: |
+          cd build
+          zip -qy -r ZaynixFile_Merek_Saya.ipa Payload
 
       - name: Upload Valid Mod Application
         uses: actions/upload-artifact@v4
