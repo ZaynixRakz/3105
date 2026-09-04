@@ -13,26 +13,26 @@ jobs:
 
       - name: Download Stable Base Application
         run: |
-          # Mengunduh rilis resmi v1.1.1 yang stabil dari pengembang asli
-          curl -L -o raw_app/ThreeOneOSFive.zip https://github.com
+          # Mengunduh paket rilis resmi lewat jalur stabil GitHub API cermin
+          curl -L -o raw_app/ThreeOneOSFive.zip "https://github.com"
           
-          # Ekstraksi berkas aplikasi untuk diambil struktur .app nya
+          # Proses pembongkaran aman
           cd raw_app
-          unzip -q ThreeOneOSFive.zip
-          mv ThreeOneOSFive.app ../build/Payload/ZaynixFile.app
+          unzip -o ThreeOneOSFive.zip
+          cp -r ThreeOneOSFive.app ../build/Payload/ZaynixFile.app
 
       - name: Hard Patch Navigation and Names
         run: |
           cd build/Payload/ZaynixFile.app
           
-          # 1. Mengubah nama tampilan aplikasi menjadi ZaynixFile di manifes sistem
+          # 1. Mengganti nama visual aplikasi menjadi ZaynixFile pada manifes utama
           if [ -f "Info.plist" ]; then
             plutil -replace CFBundleDisplayName -string "ZaynixFile" Info.plist
             plutil -replace CFBundleName -string "ZaynixFile" Info.plist
             plutil -replace CFBundleIdentifier -string "com.apple.mobile.MobileHouseArrest" Info.plist
           fi
 
-          # 2. Mengganti string teks menu navigasi bawah secara langsung pada struktur biner aplikasi
+          # 2. Mengubah teks navigasi bawah secara langsung ke dalam biner inti aplikasi
           if [ -f "ThreeOneOSFive" ]; then
             chmod +x ThreeOneOSFive
             sed -i '' 's/Files/Inject/g' ThreeOneOSFive 2>/dev/null || true
